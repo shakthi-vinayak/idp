@@ -1,0 +1,212 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Core palette: deep navy/slate dark-mode IDP (Linear-inspired) ── */
+    --background: 222 28% 7%;
+    --foreground: 210 20% 93%;
+
+    --card: 222 24% 10%;
+    --card-foreground: 210 20% 93%;
+
+    --surface: 222 22% 12%;
+    --surface-raised: 222 20% 15%;
+
+    --popover: 222 24% 10%;
+    --popover-foreground: 210 20% 93%;
+
+    /* Brand: Electric Violet (#6366f1 family) */
+    --primary: 239 84% 67%;
+    --primary-foreground: 222 28% 7%;
+    --primary-glow: 252 100% 75%;
+
+    --secondary: 222 20% 16%;
+    --secondary-foreground: 210 20% 80%;
+
+    --muted: 222 20% 14%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 239 84% 67%;
+    --accent-foreground: 210 20% 93%;
+
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 18% 18%;
+    --input: 222 18% 18%;
+    --ring: 239 84% 67%;
+    --radius: 0.6rem;
+
+    /* ── Semantic status colors ── */
+    --success: 142 71% 45%;
+    --success-foreground: 222 28% 7%;
+    --success-muted: 142 40% 12%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 28% 7%;
+    --warning-muted: 38 60% 12%;
+
+    --info: 199 89% 56%;
+    --info-foreground: 222 28% 7%;
+    --info-muted: 199 50% 12%;
+
+    /* ── Sidebar ── */
+    --sidebar: 222 32% 6%;
+    --sidebar-border: 222 18% 13%;
+    --sidebar-item: 222 20% 14%;
+    --sidebar-item-active: 239 40% 18%;
+
+    /* ── Gradients ── */
+    --gradient-primary: linear-gradient(135deg, hsl(239 84% 67%), hsl(252 100% 75%));
+    --gradient-surface: linear-gradient(180deg, hsl(222 24% 10%) 0%, hsl(222 22% 8%) 100%);
+    --gradient-hero: radial-gradient(ellipse 80% 60% at 50% -10%, hsl(239 84% 67% / 0.18) 0%, transparent 70%);
+    --grid-pattern: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40L40 0' stroke='hsl(222%2020%25%2020%25)' stroke-width='0.5' opacity='0.4'/%3E%3C/svg%3E");
+
+    /* ── Shadows ── */
+    --shadow-glow-sm: 0 0 12px hsl(239 84% 67% / 0.25);
+    --shadow-glow-md: 0 0 24px hsl(239 84% 67% / 0.35);
+    --shadow-glow-lg: 0 0 48px hsl(239 84% 67% / 0.45);
+    --shadow-card: 0 1px 3px hsl(222 28% 4% / 0.6), 0 1px 2px hsl(222 28% 4% / 0.4);
+    --shadow-card-hover: 0 8px 24px hsl(222 28% 4% / 0.6), 0 2px 6px hsl(239 84% 67% / 0.15);
+
+    /* ── Transition ── */
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+
+@layer components {
+  /* ── Status badge variants ── */
+  .badge-success {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    background: hsl(var(--success-muted));
+    color: hsl(var(--success));
+    border: 1px solid hsl(var(--success) / 0.2);
+  }
+  .badge-warning {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    background: hsl(var(--warning-muted));
+    color: hsl(var(--warning));
+    border: 1px solid hsl(var(--warning) / 0.2);
+  }
+  .badge-destructive {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    background: hsl(var(--destructive) / 0.12);
+    color: hsl(var(--destructive));
+    border: 1px solid hsl(var(--destructive) / 0.2);
+  }
+  .badge-info {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    background: hsl(var(--info-muted));
+    color: hsl(var(--info));
+    border: 1px solid hsl(var(--info) / 0.2);
+  }
+  .badge-neutral {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
+  }
+
+  /* ── Stat live indicator ── */
+  .live-dot {
+    @apply w-2 h-2 rounded-full;
+    background: hsl(var(--success));
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* ── Code / mono text ── */
+  .code-text {
+    @apply font-mono text-xs;
+    color: hsl(var(--primary-glow));
+    background: hsl(var(--primary) / 0.08);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid hsl(var(--primary) / 0.15);
+  }
+
+  /* ── Gradient border card ── */
+  .card-gradient-border {
+    position: relative;
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+  }
+  .card-gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: calc(var(--radius) + 1px);
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.4), transparent 60%);
+    z-index: -1;
+  }
+
+  /* ── Sidebar nav item ── */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200;
+    color: hsl(var(--muted-foreground));
+  }
+  .nav-item:hover {
+    background: hsl(var(--sidebar-item));
+    color: hsl(var(--foreground));
+  }
+  .nav-item.active {
+    background: hsl(var(--sidebar-item-active));
+    color: hsl(var(--primary-glow));
+    box-shadow: inset 2px 0 0 hsl(var(--primary));
+  }
+
+  /* ── Section heading ── */
+  .section-title {
+    @apply text-xs font-semibold tracking-widest uppercase;
+    color: hsl(var(--muted-foreground));
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Panel card ── */
+  .panel {
+    @apply rounded-xl border;
+    background: hsl(var(--card));
+    border-color: hsl(var(--border));
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-smooth);
+  }
+  .panel:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: hsl(var(--border));
+  }
+
+  /* ── Metric number ── */
+  .metric-value {
+    @apply text-2xl font-bold tracking-tight;
+    color: hsl(var(--foreground));
+  }
+}
