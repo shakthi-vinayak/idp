@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { LoadingState, ErrorState } from "@/components/LoadingErrorStates"
 import { useClusters } from "@/hooks/useApi"
-import { Server, Cpu, HardDrive, Network, CheckCircle2, AlertTriangle, Settings, ChevronDown, ChevronRight, Boxes } from "lucide-react"
+import { Server, Cpu, Network, CheckCircle2, AlertTriangle, Settings, ChevronDown, ChevronRight, Boxes } from "lucide-react"
 
 const providerLogos: Record<string, string> = { aws: "☁️", gcp: "🟡", azure: "🔷" }
 

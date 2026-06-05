@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
 import { LoadingState, ErrorState } from "@/components/LoadingErrorStates"
 import { useSecrets, useRotateSecret } from "@/hooks/useApi"
-import type { Secret } from "@/lib/api"
 import { Shield, Eye, EyeOff, Copy, Search, RotateCcw, Lock, Key, Globe } from "lucide-react"
 
 const configMaps = [
