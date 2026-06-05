@@ -8,7 +8,7 @@
 
 ---
 ## Platform Screen Shot
-![Nexus IDP Platform](/mages/idp.PNG)
+![Nexus IDP Platform](/images/idp.PNG)
 
 
 ## Table of Contents
