@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { QueryProvider } from "@/lib/query-client"
 import { Layout } from "@/components/Layout"
 import { DashboardPage } from "@/pages/DashboardPage"
 import { CatalogPage } from "@/pages/CatalogPage"
@@ -13,23 +14,25 @@ import { SettingsPage } from "@/pages/SettingsPage"
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/catalog" element={<CatalogPage />} />
-          <Route path="/deployments" element={<DeploymentsPage />} />
-          <Route path="/pipelines" element={<PipelinesPage />} />
-          <Route path="/clusters" element={<ClustersPage />} />
-          <Route path="/secrets" element={<SecretsPage />} />
-          <Route path="/monitoring" element={<MonitoringPage />} />
-          <Route path="/teams" element={<TeamsPage />} />
-          <Route path="/docs" element={<DocsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <QueryProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/deployments" element={<DeploymentsPage />} />
+            <Route path="/pipelines" element={<PipelinesPage />} />
+            <Route path="/clusters" element={<ClustersPage />} />
+            <Route path="/secrets" element={<SecretsPage />} />
+            <Route path="/monitoring" element={<MonitoringPage />} />
+            <Route path="/teams" element={<TeamsPage />} />
+            <Route path="/docs" element={<DocsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </QueryProvider>
   )
 }
 

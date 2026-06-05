@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom"
 import {
   LayoutDashboard, Boxes, GitBranch, Workflow, Shield,
   Server, Activity, Users, Settings, BookOpen, ChevronDown,
-  Zap, Bell, Search, LogOut, HelpCircle,
+  Zap, Search, LogOut, HelpCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Settings, Globe, Bell, Shield, Key, GitBranch, Webhook, ChevronRight, Check, ToggleLeft, ToggleRight } from "lucide-react"
+import { Settings, Globe, Bell, Shield, Key, GitBranch, Webhook, Check, ToggleLeft, ToggleRight } from "lucide-react"
 
 function SettingRow({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
   return (
