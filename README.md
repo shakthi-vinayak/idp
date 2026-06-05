@@ -1,23 +1,29 @@
 # NexusIDP — Enterprise Internal Developer Platform
 
-> A production-grade Internal Developer Platform (IDP) inspired by [Northflank](https://northflank.com/blog/top-six-internal-developer-platforms), built to give engineering teams a unified self-service layer over their infrastructure, deployments, pipelines, secrets, and observability.
+> **v1.2.0** — A production-grade Internal Developer Platform (IDP) inspired by [Northflank](https://northflank.com/blog/top-six-internal-developer-platforms), built to give engineering teams a unified self-service layer over their infrastructure, deployments, pipelines, secrets, and observability.
+
+![CI](https://github.com/shakthi-vinayak/idp/actions/workflows/ci.yml/badge.svg)
+![Deploy](https://github.com/shakthi-vinayak/idp/actions/workflows/deploy.yml/badge.svg)
+![API Health](https://github.com/shakthi-vinayak/idp/actions/workflows/api-health.yml/badge.svg)
 
 ---
 
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
-2. [Screenshots](#screenshots)
+2. [What's New in v1.2.0](#whats-new-in-v120)
 3. [Features](#features)
 4. [Tech Stack](#tech-stack)
 5. [Project Architecture](#project-architecture)
-6. [Design System](#design-system)
-7. [Implementation Guide](#implementation-guide)
-8. [Usage Guide](#usage-guide)
-9. [Page Reference](#page-reference)
-10. [Configuration](#configuration)
-11. [Deployment](#deployment)
-12. [Contributing](#contributing)
+6. [API Reference](#api-reference)
+7. [Design System](#design-system)
+8. [Implementation Guide](#implementation-guide)
+9. [Usage Guide](#usage-guide)
+10. [Page Reference](#page-reference)
+11. [Configuration](#configuration)
+12. [Deployment](#deployment)
+13. [CI/CD](#cicd)
+14. [Contributing](#contributing)
 
 ---
 
@@ -34,6 +40,19 @@ NexusIDP is an enterprise-grade Internal Developer Platform (IDP) that abstracts
 - **Team RBAC** — fine-grained roles, SSO integration, and audit trails
 
 This platform is modeled after the best practices documented by Northflank and reduces the cognitive load on developers by providing a curated, opinionated developer experience over raw Kubernetes.
+
+---
+
+## What's New in v1.2.0
+
+| Area | Change |
+|------|--------|
+| **Backend API** | Full Express.js mock API server with 15+ endpoints (`GET /deployments`, `POST /secrets/:id/rotate`, `POST /pipelines/runs/:id/retry`, etc.) |
+| **Data Layer** | TanStack Query v5 replaces hardcoded arrays — automatic caching, 30s stale time, loading/error states on every page |
+| **Mutations** | Real retry/rollback/cancel/rotate mutations with automatic cache invalidation |
+| **CI/CD** | GitHub Actions workflows: `ci.yml` (lint + type-check + build), `deploy.yml` (Vercel production deploy), `api-health.yml` (API server health check) |
+| **Deployment** | `vercel.json` config for zero-config Vercel free tier deployment |
+| **Repo metadata** | GitHub topics (`platform-engineering`, `kubernetes`, `gitops`, `devops`, etc.), description, and version bump to 1.2.0 |
 
 ---
 
@@ -133,16 +152,22 @@ This platform is modeled after the best practices documented by Northflank and r
 | **Language** | TypeScript | 5.6.2 | Full static type safety across all components |
 | **Styling** | Tailwind CSS | 3.4.17 | Utility-first CSS with custom design tokens |
 | **Routing** | React Router DOM | 7.1.1 | Client-side navigation with nested layouts |
+| **Data Fetching** | TanStack Query | 5.101.0 | Server state management, caching, mutations |
+| **Backend API** | Express.js | 4.21.0 | REST API mock server with CRUD endpoints |
 | **Charts** | Recharts | 2.13.0 | Area, bar charts for metrics visualization |
 | **Icons** | Lucide React | 0.468.0 | Consistent SVG icon set |
 | **Class Utilities** | clsx + tailwind-merge | 2.x | Safe conditional class composition |
 | **Variant System** | class-variance-authority | 0.7.1 | Type-safe component variant definitions |
 | **Animations** | tailwindcss-animate | 1.0.7 | CSS keyframe animation utilities |
 | **Post-processing** | PostCSS + Autoprefixer | 8.x / 10.x | CSS vendor prefix automation |
+| **CI/CD** | GitHub Actions | — | Automated lint, type-check, build, deploy |
+| **Hosting** | Vercel | — | Free-tier static site hosting with auto-deploy |
 
 ### Why this stack?
 
 - **Vite over CRA/Webpack** — sub-second HMR, native ESM, 10–100× faster cold starts
+- **TanStack Query over useEffect+fetch** — automatic caching, background refetch, mutation lifecycle, zero stale state
+- **Express API alongside the SPA** — transforms a UI demo into a full-stack prototype; swap for a real backend later
 - **Tailwind over CSS Modules** — design tokens enforced at the utility level, zero dead CSS
 - **React Router v7** — nested `<Outlet>` layouts mean the sidebar renders once, pages slot in
 - **Recharts** — composable SVG charts with built-in responsive containers; no canvas API needed
@@ -154,48 +179,64 @@ This platform is modeled after the best practices documented by Northflank and r
 
 ```
 idp/
+├── api/                           # Express.js mock backend API
+│   ├── server.js                  # 15+ REST endpoints with in-memory data
+│   └── package.json               # API dependencies (express, cors)
+│
+├── .github/workflows/             # GitHub Actions CI/CD
+│   ├── ci.yml                     # Lint, type-check, build on push/PR
+│   ├── deploy.yml                 # Vercel production deploy on main merge
+│   └── api-health.yml             # API server health check (scheduled)
+│
 ├── public/
 │   └── images/                    # Generated platform imagery
-│       ├── hero-banner.png         # Dashboard hero visualization
-│       ├── pipeline-visual.png     # Pipeline section banner
-│       └── service-catalog.png     # Catalog section banner
+│       ├── hero-banner.png
+│       ├── pipeline-visual.png
+│       └── service-catalog.png
 │
 ├── src/
 │   ├── main.tsx                   # React root mount
-│   ├── App.tsx                    # BrowserRouter + all route definitions
-│   ├── index.css                  # Design system: CSS custom properties, base styles, utilities
+│   ├── App.tsx                    # QueryProvider + BrowserRouter + routes
+│   ├── index.css                  # Design system: CSS custom properties, base styles
 │   ├── vite-env.d.ts              # Vite/TypeScript environment types
 │   │
 │   ├── lib/
-│   │   └── utils.ts               # cn() helper — clsx + tailwind-merge
+│   │   ├── utils.ts               # cn() helper — clsx + tailwind-merge
+│   │   ├── api.ts                 # Typed fetch client + all interface definitions
+│   │   └── query-client.tsx       # TanStack Query provider + client config
+│   │
+│   ├── hooks/
+│   │   └── useApi.ts              # All React Query hooks (useServices, useDeployments, etc.)
 │   │
 │   ├── components/
 │   │   ├── Layout.tsx             # Shell: Sidebar + <Outlet /> main area
 │   │   ├── Sidebar.tsx            # Navigation sidebar with grouped nav items
 │   │   ├── TopBar.tsx             # Per-page header with title, description, CTA
+│   │   ├── LoadingErrorStates.tsx # Shared LoadingState + ErrorState components
 │   │   └── ui/                    # Primitive design-system components
-│   │       ├── badge.tsx          # Status badges (success/warning/destructive/info)
-│   │       ├── button.tsx         # Button with variants (default/gradient/outline/ghost…)
-│   │       ├── card.tsx           # Card, CardHeader, CardTitle, CardContent, CardFooter
-│   │       ├── input.tsx          # Styled text input
-│   │       ├── progress.tsx       # Thin progress bar (success/warning/destructive)
-│   │       └── table.tsx          # Table, TableHeader, TableRow, TableHead, TableCell
+│   │       ├── badge.tsx
+│   │       ├── button.tsx
+│   │       ├── card.tsx
+│   │       ├── input.tsx
+│   │       ├── progress.tsx
+│   │       └── table.tsx
 │   │
 │   └── pages/
 │       ├── DashboardPage.tsx      # /          — Platform overview
-│       ├── CatalogPage.tsx        # /catalog   — Service registry
-│       ├── DeploymentsPage.tsx    # /deployments — Deployment history
-│       ├── PipelinesPage.tsx      # /pipelines — CI/CD pipeline runs
-│       ├── ClustersPage.tsx       # /clusters  — K8s cluster management
-│       ├── SecretsPage.tsx        # /secrets   — Secret & config management
-│       ├── MonitoringPage.tsx     # /monitoring — Observability dashboards
-│       ├── TeamsPage.tsx          # /teams     — Member & team RBAC
+│       ├── CatalogPage.tsx        # /catalog   — Service registry (API-backed)
+│       ├── DeploymentsPage.tsx    # /deployments — Deployment history (API-backed)
+│       ├── PipelinesPage.tsx      # /pipelines — CI/CD pipeline runs (API-backed)
+│       ├── ClustersPage.tsx       # /clusters  — K8s cluster management (API-backed)
+│       ├── SecretsPage.tsx        # /secrets   — Secret management (API-backed)
+│       ├── MonitoringPage.tsx     # /monitoring — Observability (API-backed)
+│       ├── TeamsPage.tsx          # /teams     — Member & team RBAC (API-backed)
 │       ├── DocsPage.tsx           # /docs      — Documentation hub
 │       └── SettingsPage.tsx       # /settings  — Platform configuration
 │
 ├── index.html                     # Entry HTML — loads Inter + JetBrains Mono fonts
-├── package.json
-├── vite.config.ts                 # Path alias: @/ → src/
+├── vercel.json                    # Vercel deployment config
+├── package.json                   # v1.2.0 — keywords, scripts, dependencies
+├── vite.config.ts                 # Path alias + API proxy to localhost:3001
 ├── tailwind.config.ts             # Extended theme: colors, shadows, animations, fonts
 ├── tsconfig.app.json              # Strict TypeScript config
 └── postcss.config.js
@@ -279,6 +320,59 @@ The design system is defined entirely in `src/index.css` (CSS custom properties)
 
 ---
 
+## API Reference
+
+The Express.js backend (`api/server.js`) serves a RESTful API with in-memory data and stateful mutations.
+
+### Base URL
+
+- Development: `http://localhost:3001/api` (Vite proxies `/api` requests automatically)
+- Production: Configure via `VITE_API_URL` environment variable
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Health check — returns `{ status, version, uptime }` |
+| `GET` | `/api/services` | List all services (query: `?type=`, `?status=`, `?search=`) |
+| `GET` | `/api/services/:id` | Get single service by ID |
+| `GET` | `/api/deployments` | List deployments (query: `?environment=`, `?status=`) |
+| `POST` | `/api/deployments/:id/retry` | Retry a failed/cancelled deployment |
+| `POST` | `/api/deployments/:id/rollback` | Rollback a failed deployment |
+| `GET` | `/api/pipelines/runs` | List all pipeline runs with stages |
+| `POST` | `/api/pipelines/runs/:id/retry` | Retry a failed pipeline run |
+| `POST` | `/api/pipelines/runs/:id/cancel` | Cancel a running pipeline run |
+| `GET` | `/api/clusters` | List all K8s clusters with node details |
+| `GET` | `/api/clusters/:id` | Get single cluster by ID |
+| `GET` | `/api/secrets` | List all secrets with expiry status |
+| `POST` | `/api/secrets/:id/rotate` | Rotate a secret (updates `lastRotated` + resets expiry) |
+| `GET` | `/api/monitoring/metrics` | Get all monitoring data (p95, errorRate, podRestarts, alerts, kpis) |
+| `GET` | `/api/teams` | List all teams |
+| `GET` | `/api/teams/members` | List all members |
+
+### Frontend Data Hooks
+
+All data fetching uses TanStack Query hooks defined in `src/hooks/useApi.ts`:
+
+| Hook | Returns | Key |
+|------|---------|-----|
+| `useServices(params?)` | `UseQueryResult<Service[]>` | `['services', params]` |
+| `useService(id)` | `UseQueryResult<Service>` | `['services', id]` |
+| `useDeployments(params?)` | `UseQueryResult<Deployment[]>` | `['deployments', params]` |
+| `useRetryDeployment()` | `UseMutationResult` | invalidates `['deployments']` |
+| `useRollbackDeployment()` | `UseMutationResult` | invalidates `['deployments']` |
+| `usePipelineRuns()` | `UseQueryResult<PipelineRun[]>` | `['pipeline-runs']` |
+| `useRetryPipeline()` | `UseMutationResult` | invalidates `['pipeline-runs']` |
+| `useCancelPipeline()` | `UseMutationResult` | invalidates `['pipeline-runs']` |
+| `useClusters()` | `UseQueryResult<Cluster[]>` | `['clusters']` |
+| `useSecrets()` | `UseQueryResult<Secret[]>` | `['secrets']` |
+| `useRotateSecret()` | `UseMutationResult` | invalidates `['secrets']` |
+| `useMonitoring()` | `UseQueryResult<MonitoringMetrics>` | `['monitoring']` (30s refetch) |
+| `useTeams()` | `UseQueryResult<Team[]>` | `['teams']` |
+| `useMembers()` | `UseQueryResult<Member[]>` | `['members']` |
+
+---
+
 ## Implementation Guide
 
 ### Prerequisites
@@ -299,7 +393,11 @@ cd idp
 ### 2. Install dependencies
 
 ```bash
+# Frontend
 npm install
+
+# Backend API
+cd api && npm install && cd ..
 ```
 
 > If you are behind a corporate proxy or encounter SSL certificate errors, run:
@@ -309,13 +407,23 @@ npm install
 
 ### 3. Start the development server
 
+**Option A — Frontend + API together (recommended):**
+```bash
+npm run dev:all
+```
+Starts both the Express API (`:3001`) and Vite (`:5173`) concurrently. The Vite proxy forwards `/api/*` to the backend automatically.
+
+**Option B — Frontend only:**
 ```bash
 npm run dev
 ```
+Pages will show loading/error states if the API is unreachable.
 
-The app will be available at **http://localhost:5173**
-
-Hot Module Replacement (HMR) is enabled — changes to any `.tsx` or `.css` file reflect instantly without a full page reload.
+**Option C — API only:**
+```bash
+npm run dev:api
+```
+API available at **http://localhost:3001/api/health**
 
 ### 4. Build for production
 
@@ -466,35 +574,44 @@ import { cn } from "@/lib/utils"
 
 ### Connecting real APIs
 
-All data is currently hardcoded in each page file as TypeScript arrays. To connect a real backend:
+Data is fetched from the Express mock API via TanStack Query hooks in `src/hooks/useApi.ts`. To connect a real backend:
 
-1. Create `src/hooks/useDeployments.ts` (or similar) using `fetch` / `axios` / `react-query`
-2. Replace the static array in the page component with the hook's returned data
-3. Add loading skeletons and error states using the existing `panel` and `badge-*` CSS classes
+1. Set `VITE_API_URL` environment variable to your real API base URL
+2. Add or modify endpoints in `src/lib/api.ts` (add new interfaces + `api.get`/`api.post` calls)
+3. Add new hooks in `src/hooks/useApi.ts` following existing patterns
+4. Each hook automatically provides `isLoading`, `isError`, `error`, `refetch` — pages use `LoadingState` and `ErrorState` components
 
 ---
 
 ## Deployment
 
-### Vercel (recommended)
+### Vercel (recommended — free tier)
+
+The project includes a `vercel.json` for zero-config deployment:
 
 ```bash
 npm install -g vercel
 vercel --prod
 ```
 
-Vercel auto-detects the Vite config and sets the output directory to `dist/`.
+Vercel auto-detects the Vite framework, runs `npm run build`, and serves from `dist/`. The free tier includes:
+- 100 GB bandwidth/month
+- Automatic HTTPS
+- Preview deployments on every PR
+
+**GitHub Actions deploy** — the `deploy.yml` workflow auto-deploys to Vercel on every push to `main`. Set these repository secrets:
+- `VERCEL_TOKEN` — from vercel.com/account/tokens
+- `VERCEL_ORG_ID` — from vercel.com/account
+- `VERCEL_PROJECT_ID` — from your project settings
 
 ### Netlify
 
 ```bash
 npm run build
-# drag-and-drop the dist/ folder to app.netlify.com
-# or use netlify-cli:
 npx netlify-cli deploy --prod --dir=dist
 ```
 
-### Docker
+### Docker (full-stack: frontend + API)
 
 ```dockerfile
 FROM node:20-alpine AS builder
@@ -504,15 +621,18 @@ RUN npm install
 COPY . .
 RUN npm run build
 
+FROM node:20-alpine AS api
+WORKDIR /app/api
+COPY api/package*.json ./
+RUN npm install
+COPY api/ .
+EXPOSE 3001
+CMD ["node", "server.js"]
+
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
-```
-
-```bash
-docker build -t nexus-idp .
-docker run -p 8080:80 nexus-idp
 ```
 
 ### GitHub Pages
@@ -526,6 +646,32 @@ export default defineConfig({
 ```
 
 Then push to the `gh-pages` branch using `gh-pages` npm package or GitHub Actions.
+
+---
+
+## CI/CD
+
+### Workflows
+
+| Workflow | Trigger | What it does |
+|----------|---------|-------------|
+| `ci.yml` | Push to `main`/`develop`, PRs to `main` | TypeScript type-check + production build |
+| `deploy.yml` | Push to `main` | Deploy to Vercel production via CLI |
+| `api-health.yml` | Push to `api/**`, every 6 hours | Start API server, hit `/api/health`, verify response |
+
+### CI pipeline details
+
+The `ci.yml` workflow:
+1. Checks out the repository
+2. Sets up Node.js 20 with npm caching
+3. Runs `npm ci` for deterministic installs
+4. Runs `npx tsc --noEmit` for type checking
+5. Runs `npm run build` to produce the production bundle
+6. Uploads `dist/` as an artifact (5-day retention)
+
+### Adding the API to CI
+
+The `api-health.yml` workflow installs API dependencies, starts the server in the background, waits for it with `wait-on`, then curls `/api/health` and validates the JSON response.
 
 ---
 
@@ -553,6 +699,7 @@ chore: upgrade recharts to v3
 - [ ] `npx tsc --noEmit` passes with zero errors
 - [ ] All new components use design system tokens (no raw hex/rgb values in JSX)
 - [ ] New pages are registered in `App.tsx` and `Sidebar.tsx`
+- [ ] New API endpoints have corresponding hooks in `useApi.ts`
 - [ ] No `console.log` left in production code
 
 ---
@@ -565,4 +712,4 @@ chore: upgrade recharts to v3
 
 ---
 
-*NexusIDP v1.0.0 — Enterprise Internal Developer Platform*
+*NexusIDP v1.2.0 — Enterprise Internal Developer Platform*

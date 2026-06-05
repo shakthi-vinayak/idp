@@ -1,0 +1,49 @@
+name: API — Backend Health Check
+
+on:
+  push:
+    paths:
+      - 'api/**'
+  pull_request:
+    paths:
+      - 'api/**'
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+
+jobs:
+  api-health:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+
+      - name: Install API dependencies
+        run: npm ci
+
+      - name: Start API server
+        run: node server.js &
+        env:
+          PORT: 3001
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:3001/api/health --timeout 10000
+
+      - name: Health check
+        run: |
+          STATUS=$(curl -s http://localhost:3001/api/health | jq -r '.status')
+          if [ "$STATUS" != "ok" ]; then
+            echo "API health check failed: status=$STATUS"
+            exit 1
+          fi
+          echo "API health check passed: status=$STATUS"
