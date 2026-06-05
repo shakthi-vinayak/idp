@@ -7,6 +7,9 @@
 ![API Health](https://github.com/shakthi-vinayak/idp/actions/workflows/api-health.yml/badge.svg)
 
 ---
+## Platform Screen Shot
+![Nexus IDP Platform](/mages/idp.PNG)
+
 
 ## Table of Contents
 
@@ -708,7 +711,7 @@ chore: upgrade recharts to v3
 
 - Design inspired by [Northflank IDP](https://northflank.com), [Linear](https://linear.app), and [Stripe Dashboard](https://stripe.com)
 - IDP concepts and feature set informed by the [Northflank top six IDPs blog post](https://northflank.com/blog/top-six-internal-developer-platforms)
-- Built with the [Qoder](https://qoder.com) AI coding assistant
+- Built with scaffolded with AI assistance, architecture and design decisions by Shakthi Vinayak
 
 ---
 
