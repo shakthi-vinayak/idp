@@ -1,8 +1,7 @@
 import { TopBar } from "@/components/TopBar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { BookOpen, ExternalLink, Clock, Search, Star, ChevronRight, FileText, GitBranch, Shield, Boxes, Activity, Server } from "lucide-react"
+import { BookOpen, ExternalLink, Search, Star, ChevronRight, FileText, GitBranch, Shield, Boxes, Activity, Server } from "lucide-react"
 import { useState } from "react"
 
 const docSections = [

@@ -1,0 +1,72 @@
+name: API — Backend Health Check
+
+on:
+  push:
+    paths:
+      - 'api/**'
+  pull_request:
+    paths:
+      - 'api/**'
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+
+jobs:
+  api-health:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install API dependencies
+        working-directory: api
+        run: npm install
+
+      - name: Start API server in background
+        working-directory: api
+        run: node server.js &
+        env:
+          PORT: 3001
+
+      - name: Wait for server to be ready
+        run: |
+          for i in $(seq 1 20); do
+            if curl -sf http://localhost:3001/api/health > /dev/null 2>&1; then
+              echo "Server is ready"
+              exit 0
+            fi
+            echo "Waiting for server... attempt $i/20"
+            sleep 1
+          done
+          echo "Server failed to start within 20 seconds"
+          exit 1
+
+      - name: Health check
+        run: |
+          RESPONSE=$(curl -s http://localhost:3001/api/health)
+          STATUS=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['status'])")
+          if [ "$STATUS" != "ok" ]; then
+            echo "API health check failed: status=$STATUS"
+            exit 1
+          fi
+          echo "API health check passed: status=$STATUS"
+          echo "Response: $RESPONSE"
+
+      - name: Test endpoints
+        run: |
+          echo "--- Testing GET /api/services ---"
+          SERVICES=$(curl -s http://localhost:3001/api/services | python3 -c "import sys,json; print(f'{len(json.load(sys.stdin))} services')")
+          echo "$SERVICES"
+
+          echo "--- Testing GET /api/deployments ---"
+          DEPLOYMENTS=$(curl -s http://localhost:3001/api/deployments | python3 -c "import sys,json; print(f'{len(json.load(sys.stdin))} deployments')")
+          echo "$DEPLOYMENTS"
+
+          echo "--- Testing POST /api/secrets/s-1/rotate ---"
+          ROTATE=$(curl -s -X POST http://localhost:3001/api/secrets/s-1/rotate | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['message'])")
+          echo "$ROTATE"

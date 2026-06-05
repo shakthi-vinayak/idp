@@ -5,31 +5,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
-import { Shield, Eye, EyeOff, Copy, Plus, Search, RotateCcw, Lock, Key, Globe } from "lucide-react"
-
-interface Secret {
-  id: string
-  name: string
-  scope: "global" | "project" | "service"
-  type: "env" | "tls" | "registry" | "ssh" | "opaque"
-  lastRotated: string
-  expiresIn?: string
-  services: number
-  status: "active" | "expiring" | "expired"
-}
-
-const secrets: Secret[] = [
-  { id: "s-1", name: "DATABASE_URL", scope: "project", type: "env", lastRotated: "3d ago", services: 4, status: "active" },
-  { id: "s-2", name: "STRIPE_SECRET_KEY", scope: "service", type: "env", lastRotated: "7d ago", expiresIn: "23d", services: 1, status: "active" },
-  { id: "s-3", name: "JWT_SIGNING_KEY", scope: "global", type: "opaque", lastRotated: "14d ago", services: 6, status: "active" },
-  { id: "s-4", name: "prod-tls-cert", scope: "global", type: "tls", lastRotated: "30d ago", expiresIn: "60d", services: 12, status: "active" },
-  { id: "s-5", name: "ghcr-registry-token", scope: "global", type: "registry", lastRotated: "60d ago", expiresIn: "5d", services: 24, status: "expiring" },
-  { id: "s-6", name: "AWS_ACCESS_KEY_ID", scope: "project", type: "env", lastRotated: "90d ago", expiresIn: "0d", services: 3, status: "expired" },
-  { id: "s-7", name: "SENDGRID_API_KEY", scope: "service", type: "env", lastRotated: "21d ago", services: 1, status: "active" },
-  { id: "s-8", name: "deploy-ssh-key", scope: "global", type: "ssh", lastRotated: "45d ago", expiresIn: "45d", services: 8, status: "active" },
-  { id: "s-9", name: "REDIS_PASSWORD", scope: "project", type: "env", lastRotated: "5d ago", services: 5, status: "active" },
-  { id: "s-10", name: "OPENAI_API_KEY", scope: "service", type: "env", lastRotated: "1d ago", services: 1, status: "active" },
-]
+import { LoadingState, ErrorState } from "@/components/LoadingErrorStates"
+import { useSecrets, useRotateSecret } from "@/hooks/useApi"
+import { Shield, Eye, EyeOff, Copy, Search, RotateCcw, Lock, Key, Globe } from "lucide-react"
 
 const configMaps = [
   { name: "app-config", scope: "production", keys: 14, services: 8, updated: "2h ago" },
@@ -61,13 +39,15 @@ export function SecretsPage() {
   const [search, setSearch] = useState("")
   const [activeTab, setActiveTab] = useState<"secrets" | "config">("secrets")
 
+  const { data: secrets = [], isLoading, isError, error, refetch } = useSecrets()
+  const rotateMutation = useRotateSecret()
+
   const filtered = secrets.filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
 
   return (
     <div className="flex flex-col h-full">
       <TopBar title="Secrets & Config" description="Centralized secret management with automatic rotation" action={{ label: "Add Secret", onClick: () => {} }} />
       <div className="flex-1 overflow-y-auto p-6 space-y-5">
-        {/* Summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: "Total Secrets", value: secrets.length, color: "hsl(var(--primary))", icon: Shield },
@@ -85,7 +65,6 @@ export function SecretsPage() {
           ))}
         </div>
 
-        {/* Tabs */}
         <div className="flex items-center gap-1 p-1 rounded-xl w-fit" style={{ background: "hsl(var(--surface))" }}>
           {(["secrets", "config"] as const).map(t => (
             <button
@@ -111,58 +90,68 @@ export function SecretsPage() {
                 <Input placeholder="Search secrets..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
               </div>
             </div>
-            <Card>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Scope</TableHead>
-                    <TableHead>Value</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Services</TableHead>
-                    <TableHead>Last Rotated</TableHead>
-                    <TableHead>Expires In</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(s => {
-                    const TypeIcon = typeIcons[s.type] || Key
-                    return (
-                      <TableRow key={s.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <TypeIcon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
-                            <span className="font-mono text-xs font-medium" style={{ color: "hsl(var(--foreground))" }}>{s.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell><Badge variant="neutral">{s.type}</Badge></TableCell>
-                        <TableCell><Badge variant={s.scope === "global" ? "primary" : s.scope === "project" ? "info" : "neutral"}>{s.scope}</Badge></TableCell>
-                        <TableCell><MaskedValue value="sk_live_abc123xyz789" /></TableCell>
-                        <TableCell>
-                          <Badge variant={s.status === "active" ? "success" : s.status === "expiring" ? "warning" : "destructive"}>
-                            {s.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell><span className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>{s.services}</span></TableCell>
-                        <TableCell><span className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>{s.lastRotated}</span></TableCell>
-                        <TableCell>
-                          {s.expiresIn
-                            ? <span className="text-xs" style={{ color: s.status === "expiring" ? "hsl(var(--warning))" : s.status === "expired" ? "hsl(var(--destructive))" : "hsl(var(--muted-foreground))" }}>{s.expiresIn}</span>
-                            : <span className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>—</span>}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="icon-sm" title="Rotate secret">
-                            <RotateCcw className="w-3.5 h-3.5" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </Card>
+
+            {isLoading && <LoadingState />}
+            {isError && <ErrorState message={error?.message || "Unknown error"} onRetry={() => refetch()} />}
+
+            {!isLoading && !isError && (
+              <Card>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Scope</TableHead>
+                      <TableHead>Value</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Services</TableHead>
+                      <TableHead>Last Rotated</TableHead>
+                      <TableHead>Expires In</TableHead>
+                      <TableHead></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map(s => {
+                      const TypeIcon = typeIcons[s.type] || Key
+                      return (
+                        <TableRow key={s.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <TypeIcon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
+                              <span className="font-mono text-xs font-medium" style={{ color: "hsl(var(--foreground))" }}>{s.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell><Badge variant="neutral">{s.type}</Badge></TableCell>
+                          <TableCell><Badge variant={s.scope === "global" ? "primary" : s.scope === "project" ? "info" : "neutral"}>{s.scope}</Badge></TableCell>
+                          <TableCell><MaskedValue value="sk_live_abc123xyz789" /></TableCell>
+                          <TableCell>
+                            <Badge variant={s.status === "active" ? "success" : s.status === "expiring" ? "warning" : "destructive"}>{s.status}</Badge>
+                          </TableCell>
+                          <TableCell><span className="text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>{s.services}</span></TableCell>
+                          <TableCell><span className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>{s.lastRotated}</span></TableCell>
+                          <TableCell>
+                            {s.expiresIn
+                              ? <span className="text-xs" style={{ color: s.status === "expiring" ? "hsl(var(--warning))" : s.status === "expired" ? "hsl(var(--destructive))" : "hsl(var(--muted-foreground))" }}>{s.expiresIn}</span>
+                              : <span className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>—</span>}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              title="Rotate secret"
+                              onClick={() => rotateMutation.mutate(s.id)}
+                              disabled={rotateMutation.isPending}
+                            >
+                              <RotateCcw className={`w-3.5 h-3.5 ${rotateMutation.isPending ? "animate-spin" : ""}`} />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </Card>
+            )}
           </>
         )}
 
@@ -178,11 +167,7 @@ export function SecretsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-4 text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
-                    <span>{cm.keys} keys</span>
-                    <span>·</span>
-                    <span>{cm.services} services</span>
-                    <span>·</span>
-                    <span>Updated {cm.updated}</span>
+                    <span>{cm.keys} keys</span><span>·</span><span>{cm.services} services</span><span>·</span><span>Updated {cm.updated}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-3">
                     <Button variant="outline" size="sm">View Keys</Button>
